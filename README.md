@@ -1,2 +1,3 @@
-# neuron
-The Bhojpur Neuron is a software-as-a-service product used as a AI/ML Engine based on Bhojpur.NET Platform for application delivery.
+# Bhojpur Neuron - Artificial Intelligence
+
+The `Bhojpur Neuron` is a high performance, artificial intelligence or machine learning engine applied within the [Bhojpur.NET Platform](https://github.com/bhojpur/platform/) ecosystem for delivery of distributed `applications` or `services`.
