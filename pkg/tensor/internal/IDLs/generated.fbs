@@ -1,0 +1,37 @@
+// Generated from generated.proto
+
+namespace internal.serialization.fb;
+
+enum Triangle : int {
+  NOT_TRIANGLE = 0,
+  UPPER = 1,
+  LOWER = 2,
+  SYMMETRIC = 3,
+}
+
+table AP {
+  shape:[int];
+  strides:[int];
+  o:uint;
+  t:internal.serialization.fb.Triangle;
+}
+
+table Dense {
+  shape:[int];
+  strides:[int];
+  o:uint;
+  t:internal.serialization.fb.Triangle;
+  type:string;
+  data:[ubyte];
+}
+
+table MaskedDense {
+  shape:[int];
+  strides:[int];
+  o:uint;
+  t:internal.serialization.fb.Triangle;
+  type:string;
+  data:[ubyte];
+  mask:[bool];
+  mask_is_soft:[bool];
+}

@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+// Copyright (c) 2018 Bhojpur Consulting Private Limited, India. All rights reserved.
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+package internal.IDLs;
+
+option go_package = "github.com/bhojpur/neuron/pkg/tensor/internal/serialization/pb;pb";
+
+import "gogoproto/gogo.proto";
+
+option (gogoproto.protosizer_all) = true;
+option (gogoproto.sizer_all) = false;
+
+message AP {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	repeated int32 shape = 1;
+	repeated int32 strides = 2;
+	uint32 o = 3 [(gogoproto.casttype) = "DataOrder"];
+	internal.IDLs.Triangle t = 4;
+}
+
+message Dense {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	repeated int32 shape = 1;
+	repeated int32 strides = 2;
+	uint32 o = 3 [(gogoproto.casttype) = "DataOrder"];
+	internal.IDLs.Triangle t = 4;
+	string type = 5;
+	bytes data = 6;
+}
+
+message MaskedDense {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	repeated int32 shape = 1;
+	repeated int32 strides = 2;
+	uint32 o = 3 [(gogoproto.casttype) = "DataOrder"];
+	internal.IDLs.Triangle t = 4;
+	string type = 5;
+	bytes data = 6;
+	repeated bool mask = 7;
+	repeated bool mask_is_soft = 8;
+}
+
+enum Triangle {
+	option (gogoproto.enumdecl) = false;
+	option (gogoproto.goproto_enum_prefix) = false;
+	option (gogoproto.goproto_enum_stringer) = false;
+	NOT_TRIANGLE = 0 [(gogoproto.enumvalue_customname) = "NotTriangle"];
+	UPPER = 1 [(gogoproto.enumvalue_customname) = "Upper"];
+	LOWER = 2 [(gogoproto.enumvalue_customname) = "Lower"];
+	SYMMETRIC = 3 [(gogoproto.enumvalue_customname) = "Symmetric"];
+}

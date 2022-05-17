@@ -1,0 +1,66 @@
+//go:build !avx && !sse
+// +build !avx,!sse
+
+package vecf32
+
+import "github.com/bhojpur/neuron/pkg/math32"
+
+// Add performs a̅ + b̅. a̅ will be clobbered
+func Add(a, b []float32) {
+	b = b[:len(a)]
+	for i, v := range a {
+		a[i] = v + b[i]
+	}
+}
+
+// Sub performs a̅ - b̅. a̅ will be clobbered
+func Sub(a, b []float32) {
+	b = b[:len(a)]
+	for i, v := range a {
+		a[i] = v - b[i]
+	}
+}
+
+// Mul performs a̅ × b̅. a̅ will be clobbered
+func Mul(a, b []float32) {
+	b = b[:len(a)]
+	for i, v := range a {
+		a[i] = v * b[i]
+	}
+}
+
+// Div performs a̅ ÷ b̅. a̅ will be clobbered
+func Div(a, b []float32) {
+	b = b[:len(a)]
+	for i, v := range a {
+		if b[i] == 0 {
+			a[i] = math32.Inf(0)
+			continue
+		}
+
+		a[i] = v / b[i]
+	}
+}
+
+// Sqrt performs √a̅ elementwise. a̅ will be clobbered
+func Sqrt(a []float32) {
+	for i, v := range a {
+		a[i] = math32.Sqrt(v)
+	}
+}
+
+// InvSqrt performs 1/√a̅ elementwise. a̅ will be clobbered
+func InvSqrt(a []float32) {
+	for i, v := range a {
+		a[i] = float32(1) / math32.Sqrt(v)
+	}
+}
+
+// Sum sums a slice of float32 and returns a float32
+func Sum(a []float32) float32 {
+	var retVal float32
+	for _, v := range a {
+		retVal += v
+	}
+	return retVal
+}

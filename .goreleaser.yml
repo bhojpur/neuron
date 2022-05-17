@@ -1,0 +1,100 @@
+project_name: neuron
+before:
+  hooks:
+    - go mod tidy
+dist: release
+source:
+  enabled: true
+  name_template: '{{ .ProjectName }}-{{ .Tag }}-source'
+checksum:
+  name_template: '{{ .ProjectName }}-{{ .Tag }}-checksums.txt'
+builds:
+- id: neurctl
+  env:
+  - CGO_ENABLED=0
+  main: ./cmd/client/main.go
+  binary: neurctl
+  ldflags:
+  - -s -w
+  - -X "github.com/bhojpur/neuron/pkg/version.Version={{.Version}}-{{.ShortCommit}}"
+  - -X "github.com/bhojpur/neuron/pkg/version.BuildTime={{ time "2006-01-02 15:04:05 MST" }}"
+  - -X "github.com/bhojpur/neuron/pkg/version.BuildCommit={{ .FullCommit }}"
+- id: neurgen
+  env:
+  - CGO_ENABLED=0
+  main: ./cmd/generator/main.go
+  binary: neurgen
+  ldflags:
+  - -s -w
+  - -X "github.com/bhojpur/neuron/pkg/version.Version={{.Version}}-{{.ShortCommit}}"
+  - -X "github.com/bhojpur/neuron/pkg/version.BuildTime={{ time "2006-01-02 15:04:05 MST" }}"
+  - -X "github.com/bhojpur/neuron/pkg/version.BuildCommit={{ .FullCommit }}"
+- id: neursvr
+  env:
+  - CGO_ENABLED=0
+  main: ./cmd/server/main.go
+  binary: neursvr
+  ldflags:
+  - -s -w
+  - -X "github.com/bhojpur/neuron/pkg/version.Version={{.Version}}-{{.ShortCommit}}"
+  - -X "github.com/bhojpur/neuron/pkg/version.BuildTime={{ time "2006-01-02 15:04:05 MST" }}"
+  - -X "github.com/bhojpur/neuron/pkg/version.BuildCommit={{ .FullCommit }}"
+archives:
+- id: neurctl
+  files:
+  - "none*"
+  format: binary # this removes the tar of the archives, leaving the binaries alone
+  name_template: neurctl-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
+  replacements:
+    darwin: Darwin
+    linux: Linux
+    386: i386
+    amd64: x86_64
+  builds:
+  - neurctl
+- id: neurgen
+  files:
+  - "none*"
+  format: binary # this removes the tar of the archives, leaving the binaries alone
+  name_template: neurgen-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
+  replacements:
+    darwin: Darwin
+    linux: Linux
+    386: i386
+    amd64: x86_64
+  builds:
+  - neurgen
+- id: neursvr
+  files:
+  - "none*"
+  format: binary # this removes the tar of the archives, leaving the binaries alone
+  name_template: neursvr-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
+  builds:
+  - neursvr
+  replacements:
+    darwin: Darwin
+    linux: Linux
+    386: i386
+    amd64: x86_64
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+release:
+  prerelease: auto
+  header: |
+    Bhojpur Neuron is a high performance machine learning engine driving many web scale applications
+    and services running over the Bhojpur.NET Platform.
+dockers:
+  - goos: linux
+    goarch: amd64
+    goarm: ''
+    dockerfile: Dockerfile
+    image_templates:
+    - "ghcr.io/bhojpur/neuron:{{ .Tag }}"
+    extra_files:
+    - README.md
