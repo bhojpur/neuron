@@ -150,18 +150,22 @@ func pipeline(pkg, filename string, kinds engine.Kinds, fns ...func(io.Writer, e
 		log.Fatal(err)
 	}
 	defer f.Close()
+	log.Printf("generating [%s] now", f.Name())
 	engine.WritePkgName(f, pkg)
 
 	for _, fn := range fns {
+		log.Printf("for kinds [%s]", kinds)
 		fn(f, kinds)
 	}
 
+	log.Printf("executing [%s]", fullpath)
 	// gofmt and goimports this stuff
 	cmd := exec.Command("goimports", "-w", fullpath)
 	if err = cmd.Run(); err != nil {
 		log.Fatalf("Go imports failed with %v for %q", err, fullpath)
 	}
 
+	log.Printf("sed assert [%s]", fullpath)
 	// account for differences in the postix from the linux sed
 	if runtime.GOOS == "darwin" || strings.HasSuffix(runtime.GOOS, "bsd") {
 		cmd = exec.Command("sed", "-i", "", `s/github.com\/alecthomas\/assert/github.com\/stretchr\/testify\/assert/g`, fullpath)
@@ -174,6 +178,7 @@ func pipeline(pkg, filename string, kinds engine.Kinds, fns ...func(io.Writer, e
 		}
 	}
 
+	log.Printf("formatting [%s]", fullpath)
 	cmd = exec.Command("gofmt", "-s", "-w", fullpath)
 	if err = cmd.Run(); err != nil {
 		log.Fatalf("Gofmt failed for %q", fullpath)

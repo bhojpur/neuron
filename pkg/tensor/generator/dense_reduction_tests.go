@@ -92,5 +92,14 @@ func init() {
 }
 
 func GenerateDenseReductionTests(f io.Writer, generic Kinds) {
+	importStmt := `
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/bhojpur/neuron/pkg/tensor/internal/execution"
+)
+`
+	f.Write([]byte(importStmt))
 	testDenseReduce.Execute(f, generic)
 }

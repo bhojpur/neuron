@@ -605,6 +605,15 @@ func (fn *InternalEngUnary) Write(w io.Writer) {
 
 func GenerateUncondEUnary(f io.Writer, kinds Kinds) {
 	var unaries []*InternalEngUnary
+	importStmt := `
+import (
+	"reflect"
+
+	"github.com/pkg/errors"
+	"github.com/bhojpur/neuron/pkg/tensor/internal/storage"
+)
+`
+	f.Write([]byte(importStmt))
 	for _, u := range unconditionalUnaries {
 		var ks []reflect.Kind
 		for _, k := range kinds.Kinds {

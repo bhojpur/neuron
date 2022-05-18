@@ -180,6 +180,15 @@ func init() {
 }
 
 func GenerateNativeIterators(f io.Writer, ak Kinds) {
+	importStmt := `
+import (
+	"reflect"
+	"unsafe"
+
+	"github.com/pkg/errors"
+)
+`
+	f.Write([]byte(importStmt))
 	fmt.Fprintf(f, importUnqualifiedTensor)
 	fmt.Fprintf(f, "%v\n", checkNativeiterable)
 	ks := filter(ak.Kinds, isSpecialized)
@@ -191,6 +200,14 @@ func GenerateNativeIterators(f io.Writer, ak Kinds) {
 }
 
 func GenerateNativeIteratorTests(f io.Writer, ak Kinds) {
+	importStmt := `
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+`
+	f.Write([]byte(importStmt))
 	fmt.Fprintf(f, importUnqualifiedTensor)
 	ks := filter(ak.Kinds, isSpecialized)
 	for _, k := range ks {

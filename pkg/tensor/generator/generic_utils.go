@@ -120,6 +120,17 @@ func init() {
 }
 
 func GenerateUtils(f io.Writer, generic Kinds) {
+	importStmt := `
+import (
+	"math/rand"
+	"reflect"
+
+	"github.com/pkg/errors"
+	"github.com/bhojpur/neuron/pkg/vector/vecf32"
+	"github.com/bhojpur/neuron/pkg/vector/vecf64"
+)
+`
+	f.Write([]byte(importStmt))
 	Range.Execute(f, generic)
 	Random.Execute(f, generic)
 }

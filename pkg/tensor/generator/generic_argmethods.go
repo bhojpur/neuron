@@ -122,6 +122,14 @@ func (fn *GenericArgMethod) Write(w io.Writer) {
 
 func GenerateGenericArgMethods(f io.Writer, ak Kinds) {
 	var argMethods []*GenericArgMethod
+	importStmt := `
+import (
+	"math"
+
+	"github.com/bhojpur/neuron/pkg/math32"
+)
+`
+	f.Write([]byte(importStmt))
 	for _, k := range ak.Kinds {
 		if !isOrd(k) {
 			continue

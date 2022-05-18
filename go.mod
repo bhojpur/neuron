@@ -30,6 +30,6 @@ require (
 	modernc.org/cc v1.0.1
 	modernc.org/golex v1.0.1 // indirect
 	modernc.org/mathutil v1.4.1 // indirect
-	modernc.org/strutil v1.1.1 // indirect
+	modernc.org/strutil v1.1.2 // indirect
 	modernc.org/xc v1.0.0
 )

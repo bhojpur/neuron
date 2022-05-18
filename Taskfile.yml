@@ -15,6 +15,18 @@ tasks:
         - GOFLAGS=-mod=mod go build -o bin/neurgen ./cmd/generator/main.go 
         - chmod 755 bin/neurgen
         - cp bin/neurgen $GOPATH/bin
+        - GOFLAGS=-mod=mod go build -o bin/gencudnn ./cmd/gencudnn/main.go 
+        - chmod 755 bin/gencudnn
+        - cp bin/gencudnn $GOPATH/bin
+        - GOFLAGS=-mod=mod go build -o bin/cudatest ./cmd/cudatest/main.go 
+        - chmod 755 bin/cudatest
+        - cp bin/cuda $GOPATH/bin
+        - GOFLAGS=-mod=mod go build -o bin/gencublas ./cmd/gencublas/main.go 
+        - chmod 755 bin/gencublas
+        - cp bin/gencublas $GOPATH/bin
+        - GOFLAGS=-mod=mod go build -o bin/genlib ./cmd/genlib/main.go 
+        - chmod 755 bin/genlib
+        - cp bin/genlib $GOPATH/bin
         - GOFLAGS=-mod=mod go build -o bin/neurctl ./cmd/client/main.go 
         - chmod 755 bin/neurctl
         - cp bin/neurctl $GOPATH/bin
@@ -53,6 +65,11 @@ tasks:
         desc: Release the mobile application for iOS App Store
         cmds:
         - guiutl release -os ios -appID net.bhojpur.neuron -appVersion 1.0 -appBuild 1
+
+    run-basic:
+        desc: Run the simple client application from source code
+        cmds:
+        - GOFLAGS=-mod=mod go run ./internal/basic/main.go
 
     run-web-server:
         desc: Run the web server application from source code

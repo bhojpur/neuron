@@ -102,6 +102,17 @@ func (fn *GenericUnary) Write(w io.Writer) {
 
 func GenerateGenericUncondUnary(f io.Writer, ak Kinds) {
 	var gen []*GenericUnary
+	importStmt := `
+import (
+	"math"
+	"math/cmplx"
+
+	"github.com/bhojpur/neuron/pkg/math32"
+	"github.com/bhojpur/neuron/pkg/vector/vecf32"
+	"github.com/bhojpur/neuron/pkg/vector/vecf64"
+)
+`
+	f.Write([]byte(importStmt))
 	for _, tu := range typedUncondUnaries {
 		if tc := tu.TypeClass(); tc != nil && !tc(tu.Kind()) {
 			continue

@@ -465,15 +465,16 @@ func makeGenericScalarScalarAriths(tbo []TypedBinOp) (retVal []*GenericScalarSca
 
 func GenerateGenericVecVecArith(f io.Writer, ak Kinds) {
 	gen := makeGenericVecVecAriths(typedAriths)
+	importStmt := `
+import (
+	"unsafe"
 
-	// importStmt := `
-	// import (
-	// 	_ "unsafe"
-
-	// _ "github.com/bhojpur/neuron/pkg/math/vecf32"
-	// _ "github.com/bhojpur/neuron/pkg/math/vecf64")
-	// `
-	// f.Write([]byte(importStmt))
+	"github.com/bhojpur/neuron/pkg/math32"
+	"github.com/bhojpur/neuron/pkg/vector/vecf32"
+	"github.com/bhojpur/neuron/pkg/vector/vecf64"
+)
+`
+	f.Write([]byte(importStmt))
 
 	for _, g := range gen {
 		g.Write(f)

@@ -383,6 +383,23 @@ func init() {
 }
 
 func GenerateDenseCompat(f io.Writer, generic Kinds) {
+	importStmt := `
+import (
+	"fmt"
+	"math"
+	"math/cmplx"
+	"reflect"
+
+	arrow "github.com/apache/arrow/go/arrow"
+	arrowArray "github.com/apache/arrow/go/arrow/array"
+	"github.com/apache/arrow/go/arrow/bitutil"
+	arrowTensor "github.com/apache/arrow/go/arrow/tensor"
+	"github.com/bhojpur/neuron/pkg/math32"
+	"github.com/pkg/errors"
+	"gonum.org/v1/gonum/mat"
+)
+`
+	f.Write([]byte(importStmt))
 	// NOTE: an alias is needed for the Arrow Array pkg to prevent naming
 	// collisions
 	importsArrow.Execute(f, generic)

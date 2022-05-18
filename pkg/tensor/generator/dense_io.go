@@ -676,6 +676,26 @@ func init() {
 }
 
 func GenerateDenseIO(f io.Writer, generic Kinds) {
+	importStmt := `
+import (
+	"bytes"
+	"encoding/binary"
+	"encoding/csv"
+	"encoding/gob"
+	"fmt"
+	"io"
+	"reflect"
+	"regexp"
+	"strconv"
+	"strings"
+
+	flatbuffers "github.com/google/flatbuffers/go"
+	"github.com/pkg/errors"
+	"github.com/bhojpur/neuron/pkg/tensor/internal/serialization/fb"
+	"github.com/bhojpur/neuron/pkg/tensor/internal/serialization/pb"
+)
+`
+	f.Write([]byte(importStmt))
 	mk := Kinds{Kinds: filter(generic.Kinds, isNumber)}
 
 	fmt.Fprint(f, "/* GOB SERIALIZATION */\n\n")

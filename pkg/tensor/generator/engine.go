@@ -112,6 +112,14 @@ func (fn *EngineArith) Write(w io.Writer) {
 }
 
 func GenerateStdEngArith(f io.Writer, ak Kinds) {
+	importStmt := `
+import (
+	"github.com/pkg/errors"
+
+	"github.com/bhojpur/neuron/pkg/tensor/internal/storage"
+)
+`
+	f.Write([]byte(importStmt))
 	var methods []*EngineArith
 	for _, abo := range arithBinOps {
 		meth := &EngineArith{

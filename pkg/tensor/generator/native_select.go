@@ -142,6 +142,15 @@ func init() {
 }
 
 func GenerateNativeSelect(f io.Writer, ak Kinds) {
+	importStmt := `
+import (
+	"reflect"
+	"unsafe"
+
+	"github.com/pkg/errors"
+)
+`
+	f.Write([]byte(importStmt))
 	fmt.Fprintf(f, importUnqualifiedTensor)
 	fmt.Fprintf(f, "%v\n", checkNativeSelectable)
 	ks := filter(ak.Kinds, isSpecialized)
