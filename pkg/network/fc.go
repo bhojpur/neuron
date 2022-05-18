@@ -1,0 +1,276 @@
+package network
+
+// Copyright (c) 2018 Bhojpur Consulting Private Limited, India. All rights reserved.
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+import (
+	G "github.com/bhojpur/neuron/pkg/engine"
+	"github.com/bhojpur/neuron/pkg/engine/hm"
+	"github.com/bhojpur/neuron/pkg/tensor"
+	"github.com/pkg/errors"
+)
+
+var (
+	_ ByNamer = &FC{}
+)
+
+// WithWB is a FC specific construction option used to initialize a FC.
+func WithWB(w, b *G.Node) ConsOpt {
+	return func(layer Layer) (Layer, error) {
+		fc, ok := layer.(*FC)
+		if !ok {
+			return layer, errors.Errorf("Expected a *FC. Got %v of %T instead", layer, layer)
+		}
+		fc.w = w
+		fc.b = b
+		fc.initialized = true
+		return layer, nil
+	}
+}
+
+// FC represents a fully connected layer
+//
+// If batched is set to true, then the first dimension is assumed to be the batch dimension
+type FC struct {
+	w, b *G.Node
+	act  ActivationFunction
+
+	name string
+
+	// config
+	size         int
+	flops        int
+	batched      bool
+	nobias       bool
+	initialized  bool
+	computeFLOPs bool
+}
+
+// MakeFC creates a FC with the given parameters
+func MakeFC(w, b *G.Node, act ActivationFunction, name string, batched bool) FC {
+	var initialized bool
+	if w != nil || b != nil {
+		initialized = true
+	}
+	return FC{
+		w:           w,
+		b:           b,
+		act:         act,
+		name:        name,
+		batched:     batched,
+		initialized: initialized,
+	}
+}
+
+// NewFC is the usual way to create a FC
+func NewFC(opts ...ConsOpt) *FC {
+	retVal := new(FC)
+	for _, opt := range opts {
+		l, err := opt(retVal)
+		if err != nil {
+			panic(err)
+		}
+		retVal, _ = l.(*FC)
+	}
+	if retVal.w != nil || retVal.b != nil {
+		retVal.initialized = true
+	}
+	return retVal
+}
+
+// Model will return the engine.Nodes associated with this fully connected layer
+func (l *FC) Model() G.Nodes {
+	if l.nobias {
+		return G.Nodes{l.w}
+	}
+	return G.Nodes{l.w, l.b}
+}
+
+// Fwd runs the equation forwards
+func (l *FC) Fwd(a G.Input) G.Result {
+	if err := G.CheckOne(a); err != nil {
+		return G.Err(errors.Wrapf(err, "Fwd of FC %v", l.name))
+	}
+
+	x := a.Node()
+
+	// lazy init
+	if !l.initialized {
+		if err := l.Init(x); err != nil {
+			return G.Err(errors.Wrapf(err, "Lazy initialization of FC %v failed", l.name))
+		}
+
+	}
+
+	var xw, xwb *G.Node
+	var err error
+	if xw, err = G.Mul(x, l.w); err != nil {
+		return G.Err(err)
+	}
+	G.WithGroupName(l.name)(xw)
+
+	if l.b == nil {
+		xwb = xw
+		goto act
+	}
+
+	if l.batched && !(l.b.Shape().Eq(xw.Shape())) {
+		if xwb, err = G.BroadcastAdd(xw, l.b, nil, []byte{0}); err != nil {
+			return G.Err(err)
+		}
+	} else {
+		if xwb, err = G.Add(xw, l.b); err != nil {
+			return G.Err(err)
+		}
+	}
+	G.WithGroupName(l.name)(xwb)
+act:
+	if l.act == nil {
+		return xwb
+	}
+	return G.LiftResult(l.act(xwb))
+}
+
+// Type will return the hm.Type of the fully connected layer
+func (l *FC) Type() hm.Type {
+	return hm.NewFnType(hm.TypeVariable('a'), hm.TypeVariable('b'))
+}
+
+// Shape will return the tensor.Shape of the fully connected layer
+func (l *FC) Shape() tensor.Shape {
+	return l.b.Shape()
+}
+
+// Name will return the name of the fully connected layer
+func (l *FC) Name() string {
+	return l.name
+}
+
+// Describe will describe a fully connected layer
+func (l *FC) Describe() {
+	panic("STUB")
+}
+
+// IsInitialized returns true if it has been initialized. This allows lazy initialization to be supported
+func (l *FC) IsInitialized() bool { return l.initialized }
+
+// methods to support extensions
+
+// ByName returns a Term by name
+func (l *FC) ByName(name string) Term {
+	if l.name == name {
+		return l
+	}
+	if l.w.Name() == name {
+		return l.w
+	}
+	if l.b != nil && l.b.Name() == name {
+		return l.b
+	}
+	return nil
+}
+
+func (l *FC) Graph() *G.ExprGraph { return l.w.Graph() }
+
+func (l *FC) FLOPs() int { return l.flops }
+
+// SetName will set the name of a fully connected layer
+func (l *FC) SetName(a string) error { l.name = a; return nil }
+
+// SetSize will set the size of a fully connected layer
+func (l *FC) SetSize(a int) error { l.size = a; return nil }
+
+// SetAct will set an activiation function of a fully connected layer
+func (l *FC) SetAct(act ActivationFunction) error { l.act = act; return nil }
+
+// SetComputeFLOPs will set the `computeFLOPs` param. If true then the FLOPs will be computed when the input is forwarded.
+func (l *FC) SetComputeFLOPs(toCompute bool) error { l.computeFLOPs = toCompute; return nil }
+
+// Init will initialize the fully connected layer
+func (l *FC) Init(xs ...*G.Node) (err error) {
+	x := xs[0]
+	g := x.Graph()
+	of := x.Dtype()
+	X := x
+	if x.IsVec() {
+		if X, err = G.Reshape(x, tensor.Shape{1, x.Shape()[0]}); err != nil {
+			return err
+		}
+	}
+
+	xshp := X.Shape()
+	l.w = G.NewMatrix(g, of, G.WithShape(xshp[1], l.size), G.WithInit(G.GlorotU(1)), G.WithName(l.name+"_W"))
+	switch {
+	case l.batched && !l.nobias:
+		l.b = G.NewMatrix(g, of, G.WithShape(1, l.size), G.WithInit(G.Zeroes()), G.WithName(l.name+"_B"))
+	case !l.batched && !l.nobias:
+		l.b = G.NewMatrix(g, of, G.WithShape(xshp[0], l.size), G.WithInit(G.Zeroes()), G.WithName(l.name+"_B"))
+	}
+	l.initialized = true
+
+	if l.computeFLOPs {
+		l.flops = l.doComputeFLOPs(x.Shape())
+	}
+	return nil
+}
+
+// ConsFC is a FC construction function. It takes a engine.Input that has a *engine.Node.
+func ConsFC(in G.Input, opts ...ConsOpt) (retVal Layer, err error) {
+	x := in.Node()
+	if x == nil {
+		return nil, errors.Errorf("ConsFC expects a *Node. Got input %v of  %T instead", in, in)
+	}
+
+	inshape := x.Shape()
+	if inshape.Dims() > 2 || inshape.Dims() == 0 {
+		return nil, errors.Errorf("Expected shape is either a vector or a matrix")
+	}
+
+	// construct
+	l := &FC{}
+	for _, opt := range opts {
+		var o Layer
+		var ok bool
+		if o, err = opt(l); err != nil {
+			return nil, err
+		}
+		if l, ok = o.(*FC); !ok {
+			return nil, errors.Errorf("Construction Option returned a non FC. Got %T instead", o)
+		}
+	}
+
+	// prep
+	if err = l.Init(x); err != nil {
+		return nil, err
+	}
+
+	return l, nil
+}
+
+func (l *FC) doComputeFLOPs(input tensor.Shape) int {
+	outer := input[0]
+	inner := input[1]
+	retInner := l.size
+	matMul := (2*inner - 1) * outer * retInner // number of ops in matmul of (m, n) × (n, k) = (2n-1)mk
+	if l.nobias {
+		return matMul
+	}
+	return matMul + (outer * retInner) // bias = the final shape's size
+}

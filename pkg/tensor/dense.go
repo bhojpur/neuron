@@ -1,5 +1,25 @@
 package tensor
 
+// Copyright (c) 2018 Bhojpur Consulting Private Limited, India. All rights reserved.
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 import (
 	"fmt"
 	"reflect"
@@ -13,7 +33,8 @@ const (
 	maskCompEvery int = 8
 )
 
-// Dense represents a dense tensor - this is the most common form of tensors. It can be used to represent vectors, matrices.. etc
+// Dense represents a dense tensor - this is the most common form of tensors. It
+// can be used to represent vectors, matrices.. etc
 type Dense struct {
 	AP
 	array
@@ -96,13 +117,15 @@ func (t *Dense) makeArray(size int) {
 	return
 }
 
-// Info returns the access pattern which explains how the data in the underlying array is accessed. This is mostly used for debugging.
+// Info returns the access pattern which explains how the data in the underlying array
+// is accessed. This is mostly used for debugging.
 func (t *Dense) Info() *AP { return &t.AP }
 
 // Dtype returns the data type of the *Dense tensor.
 func (t *Dense) Dtype() Dtype { return t.t }
 
-// Data returns the underlying array. If the *Dense represents a scalar value, the scalar value is returned instead
+// Data returns the underlying array. If the *Dense represents a scalar value, the scalar
+// value is returned instead
 func (t *Dense) Data() interface{} {
 	if t.IsScalar() {
 		return t.Get(0)
@@ -131,7 +154,8 @@ func (t *Dense) DataSize() int {
 // Engine returns the execution engine associated with this Tensor
 func (t *Dense) Engine() Engine { return t.e }
 
-// Reshape reshapes a *Dense. If the tensors need to be materialized (either it's a view or transpose), it will be materialized before the reshape happens
+// Reshape reshapes a *Dense. If the tensors need to be materialized (either it's a
+// view or transpose), it will be materialized before the reshape happens
 func (t *Dense) Reshape(dims ...int) error {
 	if t.Shape().TotalSize() != Shape(dims).TotalSize() {
 		return errors.Errorf("Cannot reshape %v into %v", t.Shape(), dims)
@@ -185,12 +209,14 @@ func (t *Dense) IsView() bool {
 	return t.viewOf != 0
 }
 
-// IsMaterializeable indicates if the Tensor is materializable - if it has either gone through some transforms or slicing
+// IsMaterializeable indicates if the Tensor is materializable - if it has either gone
+// through some transforms or slicing
 func (t *Dense) IsMaterializable() bool {
 	return t.viewOf != 0 || !t.old.IsZero()
 }
 
-// IsManuallyManaged returns true if the memory associated with this *Dense is manually managed (by the user)
+// IsManuallyManaged returns true if the memory associated with this *Dense is manually
+// managed (by the user)
 func (t *Dense) IsManuallyManaged() bool { return t.flag.manuallyManaged() }
 
 // IsNativelyAccessible checks if the pointers are accessible by Go
